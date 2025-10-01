@@ -1,0 +1,61 @@
+<script setup>
+import { Head, useForm, router } from '@inertiajs/vue3'
+import { onMounted, ref } from 'vue'
+import SignaturePad from 'signature_pad'
+
+const props = defineProps({ load: Object, rules: Object })
+const canvasRef = ref(null); let sig
+const form = useForm({
+  signer_name:'', signer_role:'receiver', signature_png:'',
+  lat:null, lng:null, accuracy_m:null, receiver_email:'', receiver_phone_e164:''
+})
+function getGeo(){
+  if (!navigator.geolocation) return
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    form.lat=pos.coords.latitude; form.lng=pos.coords.longitude; form.accuracy_m=Math.round(pos.coords.accuracy)
+  }, ()=>{}, { enableHighAccuracy:true, timeout:10000 })
+}
+function clearSig(){ sig.clear() }
+function submit(){
+  if (sig.isEmpty()) return alert('Please capture a signature')
+  if (!form.lat) return alert('We need location to verify delivery')
+  form.signature_png = sig.toDataURL('image/png')
+  window.axios.post(route('pod.submit', props.load.id), form.data()).then(({data})=>{
+    if (data.verified) router.visit(route('loads.show', props.load.id), { preserveScroll:true })
+    else { alert('Submitted, pending review: '+(data.reason||'')); router.visit(route('loads.show', props.load.id)) }
+  })
+}
+onMounted(()=>{ sig=new SignaturePad(canvasRef.value,{minWidth:1,maxWidth:2}); getGeo() })
+</script>
+
+<template>
+  <Head :title="`Sign POD • Load ${load.ref}`" />
+  <div class="p-6 space-y-6">
+    <h1 class="text-2xl font-semibold">Sign POD — Load {{ load.ref }}</h1>
+    <div v-if="load.bol_url" class="bg-white rounded shadow p-4">
+      <div class="text-sm text-gray-500 mb-2">BOL Preview</div>
+      <iframe :src="load.bol_url" class="w-full h-64 border rounded"></iframe>
+    </div>
+    <div class="bg-white rounded shadow p-4 space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div><label class="block text-sm mb-1">Signer name</label><input v-model="form.signer_name" class="w-full border rounded p-2"/></div>
+        <div><label class="block text-sm mb-1">Signer role</label>
+          <select v-model="form.signer_role" class="w-full border rounded p-2">
+            <option value="receiver">Receiver</option><option value="shipper_rep">Shipper Rep</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Signature</label>
+        <div class="border rounded"><canvas ref="canvasRef" width="600" height="220" class="w-full"></canvas></div>
+        <button @click="clearSig" class="mt-2 text-sm text-gray-600 hover:text-gray-800">Clear</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div><label class="block text-sm mb-1">Email (optional)</label><input v-model="form.receiver_email" type="email" class="w-full border rounded p-2"/></div>
+        <div><label class="block text-sm mb-1">Phone (E.164)</label><input v-model="form.receiver_phone_e164" placeholder="+1..." class="w-full border rounded p-2"/></div>
+      </div>
+      <div class="text-sm text-gray-500">Location accuracy: <b>{{ form.accuracy_m ?? '—' }}m</b> (need ≤ {{ rules.minAccuracyM }}m)</div>
+      <div class="flex justify-end"><button @click="submit" class="px-4 py-2 bg-emerald-600 text-white rounded">Submit POD</button></div>
+    </div>
+  </div>
+</template>
