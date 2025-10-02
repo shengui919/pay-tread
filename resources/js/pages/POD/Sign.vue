@@ -1,8 +1,8 @@
-<script setup>
-import { Head, useForm, router } from '@inertiajs/vue3'
-import { onMounted, ref } from 'vue'
-import SignaturePad from 'signature_pad'
-
+<script setup lang="ts">
+import SignaturePad from 'signature_pad';
+// use SignaturePad(...)
+</script>
+fix: import signature_pad and add script lang
 const props = defineProps({ load: Object, rules: Object })
 const canvasRef = ref(null); let sig
 const form = useForm({
