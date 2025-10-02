@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 const props = defineProps({ load: Object, env: Object })
