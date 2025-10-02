@@ -9,14 +9,16 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Prepare environment
         run: |
           cp .env.example .env
-          php -r "file_exists('database/database.sqlite') || mkdir('database');"
-          php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+          php -r "if (!file_exists('database')) mkdir('database');"
+          php -r "if (!file_exists('database/database.sqlite')) touch('database/database.sqlite');"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -28,21 +30,19 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Run migrations (sqlite)
-        run: php artisan migrate --force
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install Node deps
-              feature/pod-gated-payout-clean
-         run: npm ci --no-audit --no-fund || npm i --no-audit --no-fun
-              main
-              
+        run: npm ci --no-audit --no-fund || npm i --no-audit --no-fund
+
       - name: Build (optional)
         run: npm run build --if-present
+
+      - name: Run migrations (sqlite)
+        run: php artisan migrate --force
 
       - name: PHP Unit tests
         run: php artisan test -q
