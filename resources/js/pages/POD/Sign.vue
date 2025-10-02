@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import SignaturePad from 'signature_pad'
 
-const props = defineProps<{ load: object; rules: object }>()
+const props = defineProps<{ load: any; rules: any }>()
+
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let sig: SignaturePad | null = null
 
@@ -15,9 +16,17 @@ const form = useForm({
   receiver_email: '', receiver_phone_e164: ''
 })
 
-function getGeo() { /* your existing code */ }
-function clearSig() { if (sig) sig.clear() }
-function submit() { /* your existing code */ }
+function getGeo() {
+  // your existing logic
+}
+
+function clearSig() {
+  if (sig) sig.clear()
+}
+
+function submit() {
+  // your existing logic (validate, set form.signature_png = sig.toDataURL('image/png'), router.post(...))
+}
 
 onMounted(() => {
   if (canvasRef.value) {
@@ -29,7 +38,9 @@ onMounted(() => {
 
 <template>
   <!-- your existing template -->
+  <!-- make sure every <div>, <form>, <Head>, etc., has a matching closing tag -->
 </template>
+
 
   <Head :title="`Sign POD • Load ${load.ref}`" />
   <div class="p-6 space-y-6">
