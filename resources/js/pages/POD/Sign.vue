@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import SignaturePad from 'signature_pad';
-// use SignaturePad(...)
-</script>
-fix: import signature_pad and add script lang
-const props = defineProps({ load: Object, rules: Object })
-const canvasRef = ref(null); let sig
+import { ref, onMounted } from 'vue'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import SignaturePad from 'signature_pad'
+
+const props = defineProps<{ load: object; rules: object }>()
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+let sig: SignaturePad | null = null
+
 const form = useForm({
-  signer_name:'', signer_role:'receiver', signature_png:'',
-  lat:null, lng:null, accuracy_m:null, receiver_email:'', receiver_phone_e164:''
+  signer_name: '',
+  signer_role: 'receiver',
+  signature_png: '',
+  lat: null, lng: null, accuracy_m: null,
+  receiver_email: '', receiver_phone_e164: ''
 })
-function getGeo(){
-  if (!navigator.geolocation) return
-  navigator.geolocation.getCurrentPosition((pos)=>{
-    form.lat=pos.coords.latitude; form.lng=pos.coords.longitude; form.accuracy_m=Math.round(pos.coords.accuracy)
-  }, ()=>{}, { enableHighAccuracy:true, timeout:10000 })
-}
-function clearSig(){ sig.clear() }
-function submit(){
-  if (sig.isEmpty()) return alert('Please capture a signature')
-  if (!form.lat) return alert('We need location to verify delivery')
-  form.signature_png = sig.toDataURL('image/png')
-  window.axios.post(route('pod.submit', props.load.id), form.data()).then(({data})=>{
-    if (data.verified) router.visit(route('loads.show', props.load.id), { preserveScroll:true })
-    else { alert('Submitted, pending review: '+(data.reason||'')); router.visit(route('loads.show', props.load.id)) }
-  })
-}
-onMounted(()=>{ sig=new SignaturePad(canvasRef.value,{minWidth:1,maxWidth:2}); getGeo() })
+
+function getGeo() { /* your existing code */ }
+function clearSig() { if (sig) sig.clear() }
+function submit() { /* your existing code */ }
+
+onMounted(() => {
+  if (canvasRef.value) {
+    sig = new SignaturePad(canvasRef.value, { minWidth: 1, maxWidth: 2 })
+  }
+  getGeo()
+})
 </script>
 
 <template>
+  <!-- your existing template -->
+</template>
+
   <Head :title="`Sign POD • Load ${load.ref}`" />
   <div class="p-6 space-y-6">
     <h1 class="text-2xl font-semibold">Sign POD — Load {{ load.ref }}</h1>
