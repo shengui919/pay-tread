@@ -33,7 +33,7 @@ function getGeo() {
 }
 
 function clearSig() {
-  sig?.clear()
+  if (sig) sig.clear()
 }
 
 function submit() {
@@ -43,8 +43,15 @@ function submit() {
   }
   form.signature_png = sig.toDataURL('image/png')
 
-  router.post(route('pod.submit', props.load.id), form, {
-    onSuccess: () => router.visit(route('loads.show', props.load.id), { preserveScroll: true })
+  // If you have Ziggy's `route()` available:
+  // const url = route('loads.pod.submit', { load: props.load.id })
+  // If not, use a plain path:
+  const url = `/loads/${props.load.id}/pod/submit`
+
+  router.post(url, form, {
+    preserveScroll: true,
+    onError: (errs) => console.log('validation', errs),
+    onSuccess: () => console.log('submitted')
   })
 }
 
@@ -57,22 +64,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <Head :title="`Sign POD • Load ${props.load.ref}`" />
+  <!-- Page title in the browser tab -->
+  <Head :title="`Sign POD • Load ${props.load.ref}`" />
 
+  <div class="p-6 space-y-6">
     <h1 class="text-2xl font-semibold">Sign POD — Load {{ props.load.ref }}</h1>
 
-    <div v-if="props.load.bol_url" class="bg-white rounded shadow p-4">
-      <div class="text-sm text-gray-500 mb-2">BOL Preview</div>
-      <iframe :src="props.load.bol_url" class="w-full h-64 border rounded"></iframe>
-    </div>
-
+    <!-- Signature pad -->
     <div class="bg-white rounded shadow p-4 space-y-3">
+      <div>
+        <label class="block text-sm mb-1">Signature</label>
+        <div class="border rounded">
+          <!-- This must match the `canvasRef` from your script -->
+          <canvas ref="canvasRef" width="600" height="220" class="w-full"></canvas>
+        </div>
+        <button type="button" @click="clearSig" class="mt-2 text-sm text-gray-600 hover:text-gray-800">
+          Clear
+        </button>
+      </div>
+
+      <!-- Basic signer info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label class="block text-sm mb-1">Signer name</label>
           <input v-model="form.signer_name" class="w-full border rounded p-2" />
         </div>
+
         <div>
           <label class="block text-sm mb-1">Signer role</label>
           <select v-model="form.signer_role" class="w-full border rounded p-2">
@@ -82,16 +99,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Signature</label>
-        <div class="border rounded">
-          <canvas ref="canvasRef" width="600" height="220" class="w-full"></canvas>
-        </div>
-        <button @click="clearSig" type="button" class="mt-2 text-sm text-gray-600 hover:text-gray-800">
-          Clear
-        </button>
-      </div>
-
+      <!-- Optional contact info -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label class="block text-sm mb-1">Email (optional)</label>
@@ -103,14 +111,14 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Location feedback -->
       <div class="text-sm text-gray-500">
-        Location accuracy:
-        <b>{{ form.accuracy_m ?? '—' }}m</b>
-        (need ≤ {{ props.rules.minAccuracyM }}m)
+        Location accuracy: <b>{{ form.accuracy_m ?? '—' }}m</b>
       </div>
 
+      <!-- Submit -->
       <div class="flex justify-end">
-        <button @click="submit" type="button" class="px-4 py-2 bg-emerald-600 text-white rounded">
+        <button type="button" @click="submit" class="px-4 py-2 bg-emerald-600 text-white rounded">
           Submit POD
         </button>
       </div>
