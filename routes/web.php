@@ -3,13 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+Route::get('/ping', fn () => 'pong '.now());
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', fn () => Inertia::render('Home'))->name('home');
 
-require __DIR__.'/settings.php';
+Route::get('/style-guide', fn () => Inertia::render('StyleGuide'))->name('style-guide');
+
 require __DIR__.'/auth.php';
