@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import routes, { appearanceRoutes, edit } from '@/routes/appearance'
+
 import { Head } from '@inertiajs/vue3';
 
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
